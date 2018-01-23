@@ -274,6 +274,14 @@ TEST(ArraySortedMap, EmptyRemoval) {
   EXPECT_TRUE(NotFound(new_map, 1));
 }
 
+TEST(ArraySortedMap, ReverseTraversal) {
+  IntMap map =
+      IntMap().insert(1, 1).insert(5, 5).insert(3, 3).insert(2, 2).insert(4, 4);
+
+  auto expected = Pairs(Sequence(5, 0, -1));
+  EXPECT_SEQ_EQ(expected, map.reverse());
+}
+
 TEST(ArraySortedMap, InsertionAndRemovalOfMaxItems) {
   auto expected_size = kFixedSize;
   int n = static_cast<int>(expected_size);

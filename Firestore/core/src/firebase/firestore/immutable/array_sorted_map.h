@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "Firestore/core/src/firebase/firestore/immutable/map_entry.h"
+#include "Firestore/core/src/firebase/firestore/util/range.h"
 
 namespace firebase {
 namespace firestore {
@@ -164,6 +165,7 @@ class ArraySortedMap : public impl::ArraySortedMapBase {
    */
   using array_type = impl::FixedArray<value_type, kFixedSize>;
   using const_iterator = typename array_type::const_iterator;
+  using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
 
   using array_pointer = std::shared_ptr<const array_type>;
 
@@ -285,6 +287,18 @@ class ArraySortedMap : public impl::ArraySortedMapBase {
    */
   const_iterator end() const {
     return array_->end();
+  }
+
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(array_->end());
+  }
+
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator(array_->begin());
+  }
+
+  util::range<const_reverse_iterator> reverse() const {
+    return util::make_range(rbegin(), rend());
   }
 
  private:
