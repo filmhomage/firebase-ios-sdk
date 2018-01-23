@@ -23,6 +23,7 @@ namespace impl {
 
 // Define external storage for constants:
 constexpr ArraySortedMapBase::size_type ArraySortedMapBase::kFixedSize;
+constexpr ArraySortedMapBase::size_type ArraySortedMapBase::npos;
 
 }  // namespace impl
 }  // namespace immutable

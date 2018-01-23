@@ -311,7 +311,21 @@ TEST(ArraySortedMap, BalanceProblem) {
 
 // TODO(wilhuff): Iterators
 
-// TODO(wilhuff): IndexOf
+TEST(ArraySortedMap, FindIndex) {
+  IntMap map = IntMap{{1, 1}, {3, 3}, {4, 4}, {7, 7}, {9, 9}, {50, 50}};
+
+  ASSERT_EQ(IntMap::npos, map.find_index(0));
+  ASSERT_EQ(0u, map.find_index(1));
+  ASSERT_EQ(IntMap::npos, map.find_index(2));
+  ASSERT_EQ(1u, map.find_index(3));
+  ASSERT_EQ(2u, map.find_index(4));
+  ASSERT_EQ(IntMap::npos, map.find_index(5));
+  ASSERT_EQ(IntMap::npos, map.find_index(6));
+  ASSERT_EQ(3u, map.find_index(7));
+  ASSERT_EQ(IntMap::npos, map.find_index(8));
+  ASSERT_EQ(4u, map.find_index(9));
+  ASSERT_EQ(5u, map.find_index(50));
+}
 
 TEST(ArraySortedMap, AvoidsCopying) {
   IntMap map = IntMap().insert(10, 20);

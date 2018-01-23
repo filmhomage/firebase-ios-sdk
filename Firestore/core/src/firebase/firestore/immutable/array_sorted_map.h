@@ -61,6 +61,12 @@ class ArraySortedMapBase {
    */
   // TODO(wilhuff): actually use this for switching implementations.
   static constexpr size_type kFixedSize = 25;
+
+  /**
+   * A predefined value indicating "not found". Similar in function to
+   * std::string:npos.
+   */
+  static constexpr size_type npos = static_cast<size_type>(-1);
 };
 
 /**
@@ -262,7 +268,16 @@ class ArraySortedMap : public impl::ArraySortedMapBase {
     }
   }
 
-  // TODO(wilhuff): indexof
+  /**
+   * Finds the index of the give key in the map.
+   *
+   * @param key The key to look up.
+   * @return The index of the entry containing the key, or npos if not found.
+   */
+  size_type find_index(const K& key) const {
+    auto found = find(key);
+    return found == end() ? npos : static_cast<size_type>(found - begin());
+  }
 
   /** Returns true if the map contains no elements. */
   bool empty() const {
