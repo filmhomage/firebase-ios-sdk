@@ -309,7 +309,18 @@ TEST(ArraySortedMap, BalanceProblem) {
   ASSERT_SEQ_EQ(Pairs(Sorted(to_insert)), map);
 }
 
-// TODO(wilhuff): Iterators
+TEST(ArraySortedMap, KeyIterator) {
+  std::vector<int> all = Sequence(kFixedSize);
+  IntMap map = ToMap(Shuffled(all));
+
+  IntMap::const_key_iterator begin = map.keys().begin();
+  ASSERT_EQ(0, *begin);
+
+  IntMap::const_key_iterator end = map.keys().end();
+  ASSERT_EQ(all.size(), static_cast<size_t>(end - begin));
+
+  ASSERT_SEQ_EQ(all, map.keys());
+}
 
 TEST(ArraySortedMap, FindIndex) {
   IntMap map = IntMap{{1, 1}, {3, 3}, {4, 4}, {7, 7}, {9, 9}, {50, 50}};
