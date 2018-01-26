@@ -117,6 +117,7 @@ cc_library(
     log.h
     ordered_code.cc
     ordered_code.h
+    range.h
     secure_random.h
     string_util.cc
     string_util.h
