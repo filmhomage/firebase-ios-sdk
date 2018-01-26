@@ -303,6 +303,17 @@ class ArraySortedMap : public impl::ArraySortedMapBase {
   }
 
   /**
+   * Returns of a view of this ArraySortedMap containing just the keys that
+   * have been inserted in reverse order.
+   */
+  const util::range<std::reverse_iterator<const_key_iterator>> reverse_keys()
+      const {
+    auto keys_begin = util::make_iterator_first(begin());
+    auto keys_end = util::make_iterator_first(end());
+    return util::make_reverse_range(keys_begin, keys_end);
+  }
+
+  /**
    * Returns an iterator pointing to the first entry in the map. If there are
    * no entries in the map, begin() == end().
    */

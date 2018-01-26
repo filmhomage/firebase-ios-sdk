@@ -108,6 +108,15 @@ std::vector<int> Sorted(const std::vector<int>& values) {
 }
 
 /**
+ * Creates a copy of the given vector with contents reversed.
+ */
+std::vector<int> Reversed(const std::vector<int>& values) {
+  std::vector<int> result(values);
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+/**
  * Creates a vector of pairs where each pair has the same first and second
  * corresponding to an element in the given vector.
  */
@@ -320,6 +329,13 @@ TEST(ArraySortedMap, KeyIterator) {
   ASSERT_EQ(all.size(), static_cast<size_t>(end - begin));
 
   ASSERT_SEQ_EQ(all, map.keys());
+}
+
+TEST(ArraySortedMap, ReverseKeyIterator) {
+  std::vector<int> all = Sequence(kFixedSize);
+  IntMap map = ToMap(Shuffled(all));
+
+  ASSERT_SEQ_EQ(Reversed(all), map.reverse_keys());
 }
 
 TEST(ArraySortedMap, FindIndex) {

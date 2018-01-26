@@ -69,6 +69,16 @@ range<Iterator> make_range(Iterator begin, Iterator end) {
   return range<Iterator>(begin, end);
 }
 
+/**
+ * Creates the reverse range.
+ */
+template <typename Iterator>
+range<std::reverse_iterator<Iterator>> make_reverse_range(Iterator begin,
+                                                          Iterator end) {
+  using Reverse = std::reverse_iterator<Iterator>;
+  return range<Reverse>(Reverse(end), Reverse(begin));
+}
+
 }  // namespace util
 }  // namespace firestore
 }  // namespace firebase
