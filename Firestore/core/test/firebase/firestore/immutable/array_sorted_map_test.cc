@@ -389,6 +389,27 @@ TEST(ArraySortedMap, KeysIn) {
   ASSERT_SEQ_EQ(Seq(8, 12), map.keys_in(7, 11));   // in between to in between
 }
 
+TEST(ArraySortedMap, ReverseKeysFrom) {
+  std::vector<int> all = Sequence(2, 42, 2);
+  std::vector<int> to_insert = Shuffled(all);
+  IntMap map = ToMap(to_insert);
+  ASSERT_EQ(20u, map.size());
+
+  auto Seq = [](int start, int end) { return Sequence(start, end, -2); };
+
+  // Test from before keys
+  ASSERT_SEQ_EQ(Empty(), map.reverse_keys_from(0));
+
+  // Test from after keys.
+  ASSERT_SEQ_EQ(Seq(40, 0), map.reverse_keys_from(100));
+
+  // Test from key in map.
+  ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(10));
+
+  // Test from in between keys.
+  ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(11));
+}
+
 TEST(ArraySortedMap, FindIndex) {
   IntMap map = IntMap{{1, 1}, {3, 3}, {4, 4}, {7, 7}, {9, 9}, {50, 50}};
 

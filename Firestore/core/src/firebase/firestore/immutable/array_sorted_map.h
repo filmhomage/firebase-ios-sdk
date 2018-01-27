@@ -336,6 +336,27 @@ class ArraySortedMap : public impl::ArraySortedMapBase {
   }
 
   /**
+   * Returns a reverse ordered view of this ArraySortedMap whose keys are
+   * greater than or equal to the given key (in the reverse ordering).
+   */
+  const util::range<std::reverse_iterator<const_key_iterator>>
+  reverse_keys_from(const K& key) const {
+    auto keys_begin = util::make_iterator_first(begin());
+
+    // LowerBound returns an iterator pointing to the first element that is not
+    // less than the key. However a reverse iterator wants to be constructed
+    // from an iterator past the starting point. Therefore, keep advancing
+    // the found iterator while the key is equal.
+    auto found = LowerBound(key);
+    while (found != end() && !key_comparator_(key, *found)) {
+      ++found;
+    }
+
+    auto keys_end = util::make_iterator_first(found);
+    return util::make_reverse_range(keys_begin, keys_end);
+  }
+
+  /**
    * Returns an iterator pointing to the first entry in the map. If there are
    * no entries in the map, begin() == end().
    */
