@@ -58,6 +58,11 @@ testing::AssertionResult Found(const ArraySortedMap<K, V>& map,
   }
 }
 
+/** Creates an empty vector (for readability). */
+std::vector<int> Empty() {
+  return std::vector<int>{};
+}
+
 /**
  * Creates a vector containing a sequence of integers from the given starting
  * element up to, but not including, the given end element, with values
@@ -336,6 +341,52 @@ TEST(ArraySortedMap, ReverseKeyIterator) {
   IntMap map = ToMap(Shuffled(all));
 
   ASSERT_SEQ_EQ(Reversed(all), map.reverse_keys());
+}
+
+TEST(ArraySortedMap, KeysFrom) {
+  std::vector<int> all = Sequence(2, 42, 2);
+  IntMap map = ToMap(Shuffled(all));
+  ASSERT_EQ(20u, map.size());
+
+  // Test from before keys.
+  ASSERT_SEQ_EQ(all, map.keys_from(0));
+
+  // Test from after keys.
+  ASSERT_SEQ_EQ(Empty(), map.keys_from(100));
+
+  // Test from a key in the map.
+  ASSERT_SEQ_EQ(Sequence(10, 42, 2), map.keys_from(10));
+
+  // Test from in between keys.
+  ASSERT_SEQ_EQ(Sequence(12, 42, 2), map.keys_from(11));
+}
+
+TEST(ArraySortedMap, KeysIn) {
+  std::vector<int> all = Sequence(2, 42, 2);
+  IntMap map = ToMap(Shuffled(all));
+  ASSERT_EQ(20u, map.size());
+
+  auto Seq = [](int start, int end) { return Sequence(start, end, 2); };
+
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(0, 1));   // before to before
+  ASSERT_SEQ_EQ(all, map.keys_in(0, 100))      // before to after
+  ASSERT_SEQ_EQ(Seq(2, 6), map.keys_in(0, 6))  // before to in map
+  ASSERT_SEQ_EQ(Seq(2, 8), map.keys_in(0, 7))  // before to in between
+
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 0));    // after to before
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 110));  // after to after
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 6));    // after to in map
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 7));    // after to in between
+
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(6, 0));       // in map to before
+  ASSERT_SEQ_EQ(Seq(6, 42), map.keys_in(6, 100));  // in map to after
+  ASSERT_SEQ_EQ(Seq(6, 10), map.keys_in(6, 10));   // in map to in map
+  ASSERT_SEQ_EQ(Seq(6, 12), map.keys_in(6, 11));   // in map to in between
+
+  ASSERT_SEQ_EQ(Empty(), map.keys_in(7, 0));       // in between to before
+  ASSERT_SEQ_EQ(Seq(8, 42), map.keys_in(7, 100));  // in between to after
+  ASSERT_SEQ_EQ(Seq(8, 10), map.keys_in(7, 10));   // in between to key in map
+  ASSERT_SEQ_EQ(Seq(8, 12), map.keys_in(7, 11));   // in between to in between
 }
 
 TEST(ArraySortedMap, FindIndex) {

@@ -304,6 +304,28 @@ class ArraySortedMap : public impl::ArraySortedMapBase {
 
   /**
    * Returns of a view of this ArraySortedMap containing just the keys that
+   * have been inserted whose values are greater than or equal to the given key.
+   */
+  const util::range<const_key_iterator> keys_from(const K& key) const {
+    auto keys_begin = util::make_iterator_first(LowerBound(key));
+    auto keys_end = util::make_iterator_first(end());
+    return util::make_range(keys_begin, keys_end);
+  }
+
+  /**
+   * Returns of a view of this ArraySortedMap containing just the keys that
+   * have been inserted whose values are greater than or equal to the given
+   * begin_key and less than or equal to the given end_key.
+   */
+  const util::range<const_key_iterator> keys_in(const K& begin_key,
+                                                const K& end_key) const {
+    auto keys_begin = util::make_iterator_first(LowerBound(begin_key));
+    auto keys_end = util::make_iterator_first(LowerBound(end_key));
+    return util::make_range(keys_begin, keys_end);
+  }
+
+  /**
+   * Returns of a view of this ArraySortedMap containing just the keys that
    * have been inserted in reverse order.
    */
   const util::range<std::reverse_iterator<const_key_iterator>> reverse_keys()
