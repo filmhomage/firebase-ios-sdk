@@ -17,6 +17,8 @@ cc_library(
   SOURCES
     array_sorted_map.cc
     array_sorted_map.h
+    llrb_node.cc
+    llrb_node.h
     map_entry.h
   DEPENDS
     firebase_firestore_util
