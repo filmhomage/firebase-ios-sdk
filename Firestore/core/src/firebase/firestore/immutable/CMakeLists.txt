@@ -19,7 +19,10 @@ cc_library(
     array_sorted_map.h
     llrb_node.cc
     llrb_node.h
+    llrb_node_iterator.h
     map_entry.h
+    #tree_sorted_map.cc
+    #tree_sorted_map.h
   DEPENDS
     firebase_firestore_util
 )
