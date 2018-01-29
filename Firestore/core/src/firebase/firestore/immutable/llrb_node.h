@@ -89,15 +89,14 @@ class LlrbNode : LlrbNodeBase {
   }
 
   static pointer_type Wrap(LlrbNode<K, V>&& node) {
-    return std::make_shared<const LlrbNode<K, V>>(
-        std::forward<LlrbNode<K, V>>(node));
+    return std::make_shared<const LlrbNode<K, V>>(std::move(node));
   }
 
-  explicit LlrbNode(const K& key,
-                    const V& value,
-                    Color color = Color::Default,
-                    const pointer_type& left = Empty(),
-                    const pointer_type& right = Empty())
+  LlrbNode(const K& key,
+           const V& value,
+           Color color = Color::Default,
+           const pointer_type& left = Empty(),
+           const pointer_type& right = Empty())
       : key_(key),
         value_(value),
         red_(static_cast<uint32_t>(color)),

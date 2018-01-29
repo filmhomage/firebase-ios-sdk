@@ -74,13 +74,13 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
   /**
    * The type of the entries stored in the map.
    */
-  using value_type = std::pair<K, V>:
+  using value_type = std::pair<K, V>;
 
   /**
    * The type of the fixed-size array containing entries of value_type.
    */
   using node_type = LlrbNode<K, V>;
-  using const_iterator = typename LlrbNodeIterator<K, V>;
+  using const_iterator = LlrbNodeIterator<K, V>;
   using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
   using const_key_iterator = firebase::firestore::util::iterator_first<const_iterator>;
 

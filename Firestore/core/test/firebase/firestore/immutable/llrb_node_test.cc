@@ -14,20 +14,45 @@
  * limitations under the License.
  */
 
-#include "Firestore/core/src/firebase/firestore/immutable/llrb_node.h"
+#include "Firestore/core/src/firebase/firestore/immutable/llrb_node_iterator.h"
 
 #include <time.h>
 
 #include <random>
 #include <unordered_set>
 
+#include "Firestore/core/src/firebase/firestore/immutable/llrb_node.h"
+#include "Firestore/core/src/firebase/firestore/util/range.h"
+#include "Firestore/core/src/firebase/firestore/util/secure_random.h"
+#include "Firestore/core/test/firebase/firestore/immutable/testing.h"
 #include "gtest/gtest.h"
 
 namespace firebase {
 namespace firestore {
 namespace immutable {
 
-typedef LlrbNode<int, int> IntNode;
+using IntNode = LlrbNode<int, int>;
+using IntNodeIterator = LlrbNodeIterator<int, int>;
+
+IntNodeIterator Begin(IntNode::pointer_type node) {
+  return IntNodeIterator::Begin(node);
+}
+
+IntNodeIterator End(IntNode::pointer_type node) {
+  return IntNodeIterator::End(node);
+}
+
+/**
+ * Creates an ArraySortedMap by inserting a pair for each value in the vector.
+ * Each pair will have the same key and value.
+ */
+IntNode::pointer_type ToTree(const std::vector<int>& values) {
+  IntNode::pointer_type result = IntNode::Empty();
+  for (auto&& value : values) {
+    result = result->insert(value, value);
+  }
+  return result;
+}
 
 TEST(LlrbNode, PropertiesForEmpty) {
   IntNode::pointer_type empty = IntNode::Empty();
@@ -126,6 +151,38 @@ TEST(LlrbNode, Size) {
     root = root->insert(value, value);
     EXPECT_EQ(expected.size(), root->size());
   }
+}
+
+TEST(LlrbNodeIterator, BeginEndEmpty) {
+  IntNode::pointer_type empty = IntNode::Empty();
+  IntNodeIterator begin = Begin(empty);
+  IntNodeIterator end = End(empty);
+  ASSERT_EQ(IntNode::Empty().get(), end.get());
+  ASSERT_EQ(begin, end);
+}
+
+TEST(LlrbNodeIterator, BeginEndOne) {
+  IntNode::pointer_type node = ToTree(Sequence(1));
+  IntNodeIterator begin = Begin(node);
+  IntNodeIterator end = End(node);
+  ASSERT_EQ(IntNode::Empty().get(), end.get());
+
+  ASSERT_NE(begin, end);
+  ASSERT_EQ(0, begin->key());
+
+  ++begin;
+  ASSERT_EQ(IntNode::Empty().get(), begin.get());
+  ASSERT_EQ(begin, end);
+}
+
+TEST(LlrbNodeIterator, Increments) {
+  std::vector<int> to_insert = Sequence(3);
+  IntNode::pointer_type node = ToTree(to_insert);
+  IntNodeIterator begin = Begin(node);
+  IntNodeIterator end = End(node);
+
+  std::vector<IntNode> result = Append(util::make_range(begin, end));
+  ASSERT_EQ(Pairs(to_insert), result);
 }
 
 }  // namespace immutable
