@@ -109,6 +109,7 @@ class LlrbNodeIterator {
     node = node->right();
     while (!node->empty()) {
       stack_.push(node);
+      node = node->left();
     }
 
     return *this;

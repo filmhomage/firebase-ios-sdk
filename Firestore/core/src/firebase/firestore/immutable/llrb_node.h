@@ -54,42 +54,24 @@ class LlrbNodeBase {
 template <typename K, typename V>
 class LlrbNode : LlrbNodeBase {
  public:
-  typedef LlrbNode<K, V> this_type;
-
   /**
    * The type of the entries stored in the map.
    */
   typedef std::pair<K, V> value_type;
 
-  typedef std::shared_ptr<const LlrbNode<K, V>> pointer_type;
+  typedef std::shared_ptr<LlrbNode<K, V>> pointer_type;
 
   /**
    * Returns an empty node.
    */
   static pointer_type Empty() {
-    static const pointer_type empty_node =
-        Wrap(LlrbNode<K, V>(K(), V(), Color::Black, 0u, nullptr, nullptr));
+    static const pointer_type empty_node = Wrap(LlrbNode<K, V>(
+        K(), V(), Color::Black, /* size= */ 0u, nullptr, nullptr));
     return empty_node;
   }
 
-  /**
-   * Creates a new LlrbNode with the given key and value.
-   */
-  static pointer_type Create(const K& key, const V& value) {
-    return std::make_shared<const LlrbNode<K, V>>(key, value);
-  }
-
-  static pointer_type Create(const K& key,
-                             const V& value,
-                             Color color,
-                             const pointer_type& left,
-                             const pointer_type& right) {
-    return std::make_shared<const LlrbNode<K, V>>(key, value, color, left,
-                                                  right);
-  }
-
-  static pointer_type Wrap(LlrbNode<K, V>&& node) {
-    return std::make_shared<const LlrbNode<K, V>>(std::move(node));
+  LlrbNode()
+      : LlrbNode(K(), V(), Color::Black, /* size= */ 0u, Empty(), Empty()) {
   }
 
   LlrbNode(const K& key,
@@ -97,19 +79,16 @@ class LlrbNode : LlrbNodeBase {
            Color color = Color::Default,
            const pointer_type& left = Empty(),
            const pointer_type& right = Empty())
-      : key_(key),
-        value_(value),
-        red_(static_cast<uint32_t>(color)),
-        left_(left),
-        right_(right) {
-    size_ = left->size_ + 1 + right_->size_;
+      : LlrbNode(key, value, static_cast<uint32_t>(color),
+                 left->size_ + 1 + right->size_,
+                 left, right) {
   }
 
   /** Returns a tree node with the given key-value pair set/updated. */
   template <typename Comparator = std::less<K>>
-  pointer_type insert(const K& key,
-                      const V& value,
-                      const Comparator& comparator = Comparator()) const;
+  LlrbNode insert(const K& key,
+                  const V& value,
+                  const Comparator& comparator = Comparator()) const;
 
   /** Returns the number of elements at this node or beneath it in the tree. */
   size_type size() const {
@@ -159,16 +138,25 @@ class LlrbNode : LlrbNodeBase {
         right_(right) {
   }
 
+  template <typename... Args>
+  static pointer_type Create(Args... args) {
+    return std::make_shared<LlrbNode<K, V>>(std::forward<Args>(args)...);
+  }
+
+  static pointer_type Wrap(LlrbNode<K, V>&& node) {
+    return std::make_shared<LlrbNode<K, V>>(std::move(node));
+  }
+
+  /** Returns a tree node with the given key-value pair set/updated. */
+  template <typename Comparator>
+  LlrbNode InsertImpl(const K& key,
+                      const V& value,
+                      const Comparator& comparator) const;
+
   /** Returns the opposite color of the argument. */
   static size_type OppositeColor(size_type color) {
     return color == Color::Red ? Color::Black : Color::Red;
   }
-
-  /** Returns a tree node with the given key-value pair set/updated. */
-  template <typename Comparator = std::less<K>>
-  LlrbNode<K, V> InsertImpl(const K& key,
-                            const V& value,
-                            const Comparator& comparator) const;
 
   void FixUp();
 
@@ -183,8 +171,8 @@ class LlrbNode : LlrbNodeBase {
   size_type red_ : 1;
   size_type size_ : 31;
 
-  std::shared_ptr<const LlrbNode<K, V>> left_;
-  std::shared_ptr<const LlrbNode<K, V>> right_;
+  std::shared_ptr<LlrbNode<K, V>> left_;
+  std::shared_ptr<LlrbNode<K, V>> right_;
 
   friend std::ostream& operator<<(std::ostream& out,
                                   const LlrbNode<K, V>& value);
@@ -192,14 +180,14 @@ class LlrbNode : LlrbNodeBase {
 
 template <typename K, typename V>
 template <typename Comparator>
-typename LlrbNode<K, V>::pointer_type LlrbNode<K, V>::insert(
+LlrbNode<K, V> LlrbNode<K, V>::insert(
     const K& key, const V& value, const Comparator& comparator) const {
   LlrbNode<K, V> root = InsertImpl(key, value, comparator);
   // The root must always be black
   if (root.red()) {
     root.red_ = Color::Black;
   }
-  return Wrap(std::move(root));
+  return root;
 }
 
 template <typename K, typename V>
@@ -216,18 +204,19 @@ LlrbNode<K, V> LlrbNode<K, V>::InsertImpl(const K& key,
   // finally wrapping the result.
   LlrbNode<K, V> result(*this);
 
-  bool descending = comparator(value, value_);
+  bool descending = comparator(key, key_);
   if (descending) {
     result.left_ = Wrap(result.left_->InsertImpl(key, value, comparator));
     result.FixUp();
 
   } else {
-    bool ascending = comparator(value_, value);
+    bool ascending = comparator(key_, key);
     if (ascending) {
       result.right_ = Wrap(result.right_->InsertImpl(key, value, comparator));
       result.FixUp();
 
     } else {
+      // key remains unchanged
       result.value_ = value;
     }
   }
@@ -262,6 +251,7 @@ void LlrbNode<K, V>::RotateLeft() {
   pointer_type right = right_->right_;
 
   // size_ remains unchanged after a rotation. Also preserve color.
+  key_ = right_->key_;
   value_ = right_->value_;
   left_ = left;
   right_ = right;
@@ -280,6 +270,7 @@ void LlrbNode<K, V>::RotateRight() {
   pointer_type right = Create(key_, value_, Color::Red, left_->right_, right_);
 
   // size_ remains unchanged after a rotation. Preserve color too.
+  key_ = left_->key_;
   value_ = left_->value_;
   left_ = left;
   right_ = right;
@@ -293,7 +284,7 @@ void LlrbNode<K, V>::FlipColor() {
   LlrbNode<K, V> new_right = *right_;
   new_right.red_ = OppositeColor(right_->red_);
 
-  // Preserve value_ and size_
+  // Preserve key_, value_, and size_
   red_ = OppositeColor(red_);
   left_ = Wrap(std::move(new_left));
   right_ = Wrap(std::move(new_right));
