@@ -178,17 +178,29 @@ TEST(LlrbNodeIterator, BeginEndOne) {
 }
 
 TEST(LlrbNodeIterator, Increments) {
-  std::vector<int> to_insert = Sequence(3);
+  std::vector<int> to_insert = Sequence(50);
   IntNode node = ToTree(to_insert);
   IntNodeIterator begin = Begin(node);
   IntNodeIterator end = End(node);
 
   std::vector<std::pair<int, int>> actual;
-  for (auto&& node : util::make_range(begin, end)) {
+  for (auto &&node : util::make_range(begin, end)) {
+    actual.emplace_back(node.key(), node.value());
+  }
+}
+
+TEST(LlrbNodeIterator, Decrements) {
+  std::vector<int> to_insert = Sequence(50000);
+  IntNode node = ToTree(to_insert);
+  IntNodeIterator begin = Begin(node);
+  IntNodeIterator end = End(node);
+
+  std::vector<std::pair<int, int>> actual;
+  for (auto&& node : util::make_reverse_range(begin, end)) {
     actual.emplace_back(node.key(), node.value());
   }
 
-  ASSERT_EQ(Pairs(to_insert), actual);
+  ASSERT_EQ(Pairs(Reversed(to_insert)), actual);
 }
 
 }  // namespace immutable

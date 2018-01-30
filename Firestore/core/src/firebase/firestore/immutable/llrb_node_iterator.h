@@ -42,8 +42,7 @@ class LlrbNodeIterator {
   using stack_type = std::stack<node_pointer_type>;
 
  public:
-  // using iterator_category = std::bidirectional_iterator_tag;
-  using iterator_category = std::forward_iterator_tag;
+  using iterator_category = std::bidirectional_iterator_tag;
   using value_type = node_type;
   using pointer = value_type*;
   using reference = value_type&;
@@ -52,17 +51,13 @@ class LlrbNodeIterator {
   static LlrbNodeIterator Begin(const node_pointer_type root) {
     stack_type stack;
 
-    // First push the empty node so that once the stack has been exhausted
-    // the empty node will remain.
-    stack.push(node_type::Empty());
-
     node_pointer_type node = root;
     while (!node->empty()) {
       stack.push(node);
       node = node->left();
     }
 
-    return LlrbNodeIterator(std::move(stack));
+    return LlrbNodeIterator(std::move(stack), /* end= */ stack.empty());
   }
 
   static LlrbNodeIterator End(const node_pointer_type root) {
@@ -74,14 +69,15 @@ class LlrbNodeIterator {
       node = node->right();
     }
 
-    // One past the end: push one of the empty children too.
-    stack.push(node_type::Empty());
-
-    return LlrbNodeIterator(std::move(stack));
+    return LlrbNodeIterator(std::move(stack), /* end= */ true);
   }
 
   node_pointer_type top() const {
-    return stack_.top();
+    if (end_) {
+      return node_type::Empty();
+    } else {
+      return stack_.top();
+    }
   }
   pointer get() const {
     return top().get();
@@ -94,7 +90,7 @@ class LlrbNodeIterator {
   }
 
   LlrbNodeIterator& operator++() {
-    if (stack_.size() <= 1) {
+    if (end_) {
       // First entry of the stack is reserved for the empty node. Cannot advance
       // past the end of the tree.
       return *this;
@@ -112,19 +108,42 @@ class LlrbNodeIterator {
       node = node->left();
     }
 
+    if (stack_.empty()) {
+      end_ = true;
+    }
+
     return *this;
   }
-//  LlrbNodeIterator& operator--() {
-//    return *this;
-//  }
+  LlrbNodeIterator& operator--() {
+    if (end_) {
+      end_ = false;
+      return *this;
+    }
+
+    // Pop the stack, moving the currently pointed to node to the parent.
+    node_pointer_type node = stack_.top();
+    stack_.pop();
+
+    // If the popped node has a right subtree that has to precede the parent in
+    // the iteration order so push those on.
+    node = node->left();
+    while (!node->empty()) {
+      stack_.push(node);
+      node = node->right();
+    }
+    return *this;
+  }
+
   LlrbNodeIterator operator++(int /*unused*/) {
     LlrbNodeIterator result = *this;
     ++*this;
     return result;
   }
-//  LlrbNodeIterator operator--(int /*unused*/) {
-//    return it_--;
-//  }
+  LlrbNodeIterator operator--(int /*unused*/) {
+    LlrbNodeIterator result = *this;
+    --*this;
+    return result;
+  }
 
   bool operator==(LlrbNodeIterator b) const {
     return get() == b.get();
@@ -146,11 +165,12 @@ class LlrbNodeIterator {
     return a.get() >= b.get();
   }
  private:
-  LlrbNodeIterator(stack_type&& stack)
-      : stack_(std::move(stack)) {
+  LlrbNodeIterator(stack_type&& stack, bool end)
+      : stack_(std::move(stack)), end_(end) {
   }
 
   stack_type stack_;
+  bool end_;
 };
 
 }
