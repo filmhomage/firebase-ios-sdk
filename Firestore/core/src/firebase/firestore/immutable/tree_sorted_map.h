@@ -20,12 +20,12 @@
 #include <assert.h>
 
 #include <algorithm>
-#include <array>
 #include <functional>
 #include <memory>
 #include <utility>
 
 #include "Firestore/core/src/firebase/firestore/immutable/llrb_node.h"
+#include "Firestore/core/src/firebase/firestore/immutable/llrb_node_iterator.h"
 #include "Firestore/core/src/firebase/firestore/immutable/map_entry.h"
 #include "Firestore/core/src/firebase/firestore/util/iterator_adaptors.h"
 #include "Firestore/core/src/firebase/firestore/util/range.h"
@@ -77,20 +77,20 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
   using value_type = std::pair<K, V>;
 
   /**
-   * The type of the fixed-size array containing entries of value_type.
+   * The type of the node containing entries of value_type.
    */
   using node_type = LlrbNode<K, V>;
   using const_iterator = LlrbNodeIterator<K, V>;
   using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
   using const_key_iterator = firebase::firestore::util::iterator_first<const_iterator>;
 
-  using array_pointer = std::shared_ptr<const array_type>;
+  using node_pointer = std::shared_ptr<node_type>;
 
   /**
    * Creates an empty TreeSortedMap.
    */
   explicit TreeSortedMap(const C& comparator = C())
-      : array_(EmptyTree()), key_comparator_(comparator) {
+      : root_(node_type::Empty()), key_comparator_(comparator) {
   }
 
   /**
@@ -98,7 +98,12 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
    */
   TreeSortedMap(std::initializer_list<value_type> entries,
                 const C& comparator = C())
-      : array_(), key_comparator_(comparator) {
+      : root_(), key_comparator_(comparator) {
+    node_pointer root = node_type::Empty();
+    for (auto&& entry : entries) {
+      root = root->insert(entry.first, entry.second);
+    }
+    root_ = root;
   }
 
   /**
@@ -233,15 +238,9 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
   }
 
  private:
-  static array_pointer EmptyTree() {
-    static const array_pointer kEmptyTree =
-        std::make_shared<const array_type>();
-    return kEmptyTree;
-  }
-
-  TreeSortedMap(const array_pointer& array,
-                 const key_comparator_type& key_comparator) noexcept
-      : array_(array), key_comparator_(key_comparator) {
+  TreeSortedMap(const node_pointer& root,
+                const key_comparator_type& key_comparator) noexcept
+      : root_(root), key_comparator_(key_comparator) {
   }
 
   this_type wrap(const array_pointer& array) const noexcept {
@@ -252,7 +251,7 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
     return std::lower_bound(begin(), end(), key, key_comparator_);
   }
 
-  array_pointer array_;
+  node_pointer root_;
   key_comparator_type key_comparator_;
 };
 

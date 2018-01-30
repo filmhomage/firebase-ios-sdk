@@ -18,7 +18,7 @@ cc_test(
     array_sorted_map_test.cc
     llrb_node_test.cc
     testing.h
-    #tree_sorted_map_test.cc
+    tree_sorted_map_test.cc
   DEPENDS
     firebase_firestore_immutable
     firebase_firestore_util

@@ -114,6 +114,7 @@ class LlrbNodeIterator {
 
     return *this;
   }
+
   LlrbNodeIterator& operator--() {
     if (end_) {
       end_ = false;

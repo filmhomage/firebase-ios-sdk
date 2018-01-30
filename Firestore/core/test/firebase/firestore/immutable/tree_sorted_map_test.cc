@@ -26,40 +26,11 @@ namespace firebase {
 namespace firestore {
 namespace immutable {
 
-typedef ArraySortedMap<int, int> IntMap;
-constexpr ArraySortedMapBase::size_type kFixedSize =
-    ArraySortedMapBase::kFixedSize;
+typedef TreeSortedMap<int, int> IntMap;
+constexpr TreeSortedMapBase::size_type kFixedSize =
+    TreeSortedMapBase::kFixedSize;
 
-template <typename K, typename V>
-testing::AssertionResult NotFound(const ArraySortedMap<K, V>& set,
-                                  const K& key) {
-  auto found = set.find(key);
-  if (found == set.end()) {
-    return testing::AssertionSuccess();
-  } else {
-    return testing::AssertionFailure()
-           << "Should not have found (" << found->first << ", " << found->second
-           << ") @ " << found;
-  }
-}
-
-template <typename K, typename V>
-testing::AssertionResult Found(const ArraySortedMap<K, V>& map,
-                               const K& key,
-                               const V& expected) {
-  auto found = map.find(key);
-  if (found == map.end()) {
-    return testing::AssertionFailure() << "Did not find key " << key;
-  }
-  if (found->second == expected) {
-    return testing::AssertionSuccess();
-  } else {
-    return testing::AssertionFailure() << "Found entry was (" << found->first
-                                       << ", " << found->second << ")";
-  }
-}
-
-TEST(ArraySortedMap, SearchForSpecificKey) {
+TEST(TreeSortedMap, SearchForSpecificKey) {
   IntMap map{{1, 3}, {2, 4}};
 
   ASSERT_TRUE(Found(map, 1, 3));
@@ -67,7 +38,7 @@ TEST(ArraySortedMap, SearchForSpecificKey) {
   ASSERT_TRUE(NotFound(map, 3));
 }
 
-TEST(ArraySortedMap, RemoveKeyValuePair) {
+TEST(TreeSortedMap, RemoveKeyValuePair) {
   IntMap map{{1, 3}, {2, 4}};
 
   IntMap new_set = map.erase(1);
@@ -79,7 +50,7 @@ TEST(ArraySortedMap, RemoveKeyValuePair) {
   ASSERT_TRUE(Found(map, 2, 4));
 }
 
-TEST(ArraySortedMap, MoreRemovals) {
+TEST(TreeSortedMap, MoreRemovals) {
   IntMap map = IntMap()
                    .insert(1, 1)
                    .insert(50, 50)
@@ -115,7 +86,7 @@ TEST(ArraySortedMap, MoreRemovals) {
   ASSERT_TRUE(NotFound(s3, 1));
 }
 
-TEST(ArraySortedMap, RemoveMiddleBug) {
+TEST(TreeSortedMap, RemoveMiddleBug) {
   IntMap map{{1, 1}, {2, 2}, {3, 3}};
   ASSERT_TRUE(Found(map, 1, 1));
   ASSERT_TRUE(Found(map, 2, 2));
@@ -127,7 +98,7 @@ TEST(ArraySortedMap, RemoveMiddleBug) {
   ASSERT_TRUE(Found(s1, 3, 3));
 }
 
-TEST(ArraySortedMap, Increasing) {
+TEST(TreeSortedMap, Increasing) {
   auto total = static_cast<int>(kFixedSize);
   IntMap map;
 
@@ -142,13 +113,13 @@ TEST(ArraySortedMap, Increasing) {
   ASSERT_EQ(0u, map.size());
 }
 
-TEST(ArraySortedMap, Override) {
+TEST(TreeSortedMap, Override) {
   IntMap map = IntMap().insert(10, 10).insert(10, 8);
 
   ASSERT_TRUE(Found(map, 10, 8));
 }
 
-TEST(ArraySortedMap, Empty) {
+TEST(TreeSortedMap, Empty) {
   IntMap map = IntMap().insert(10, 10).erase(10);
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(0u, map.size());
@@ -156,18 +127,18 @@ TEST(ArraySortedMap, Empty) {
   EXPECT_TRUE(NotFound(map, 10));
 }
 
-TEST(ArraySortedMap, EmptyGet) {
+TEST(TreeSortedMap, EmptyGet) {
   IntMap map;
   EXPECT_TRUE(NotFound(map, 10));
 }
 
-TEST(ArraySortedMap, EmptySize) {
+TEST(TreeSortedMap, EmptySize) {
   IntMap map;
   EXPECT_TRUE(map.empty());
   EXPECT_EQ(0u, map.size());
 }
 
-TEST(ArraySortedMap, EmptyRemoval) {
+TEST(TreeSortedMap, EmptyRemoval) {
   IntMap map;
   IntMap new_map = map.erase(1);
   EXPECT_TRUE(new_map.empty());
@@ -175,83 +146,8 @@ TEST(ArraySortedMap, EmptyRemoval) {
   EXPECT_TRUE(NotFound(new_map, 1));
 }
 
-/** Creates an empty vector (for readability). */
-std::vector<int> Empty() {
-  return std::vector<int>{};
-}
-
 /**
- * Creates a vector containing a sequence of integers from the given starting
- * element up to, but not including, the given end element, with values
- * incremented by the given step.
- *
- * If step is negative the sequence is in descending order (but still starting
- * at start ane ending before end).
- */
-std::vector<int> Sequence(int start, int end, int step = 1) {
-  std::vector<int> result;
-  if (step > 0) {
-    for (int i = start; i < end; i += step) {
-      result.push_back(i);
-    }
-  } else {
-    for (int i = start; i > end; i += step) {
-      result.push_back(i);
-    }
-  }
-  return result;
-}
-
-/**
- * Creates a vector containing a sequence of integers with the given number of
- * elements, from zero up to, but not including the given value.
- */
-std::vector<int> Sequence(int num_elements) {
-  return Sequence(0, num_elements);
-}
-
-/**
- * Creates a copy of the given vector with contents shuffled randomly.
- */
-std::vector<int> Shuffled(const std::vector<int>& values) {
-  std::vector<int> result(values);
-  util::SecureRandom rng;
-  std::shuffle(result.begin(), result.end(), rng);
-  return result;
-}
-
-/**
- * Creates a copy of the given vector with contents sorted.
- */
-std::vector<int> Sorted(const std::vector<int>& values) {
-  std::vector<int> result(values);
-  std::sort(result.begin(), result.end());
-  return result;
-}
-
-/**
- * Creates a copy of the given vector with contents reversed.
- */
-std::vector<int> Reversed(const std::vector<int>& values) {
-  std::vector<int> result(values);
-  std::reverse(result.begin(), result.end());
-  return result;
-}
-
-/**
- * Creates a vector of pairs where each pair has the same first and second
- * corresponding to an element in the given vector.
- */
-std::vector<std::pair<int, int>> Pairs(const std::vector<int>& values) {
-  std::vector<std::pair<int, int>> result;
-  for (auto&& value : values) {
-    result.emplace_back(value, value);
-  }
-  return result;
-}
-
-/**
- * Creates an ArraySortedMap containing
+ * Creates an TreeSortedMap containing
  */
 IntMap ToMap(const std::vector<int>& values) {
   IntMap result;
@@ -261,18 +157,7 @@ IntMap ToMap(const std::vector<int>& values) {
   return result;
 }
 
-template <typename Container>
-std::vector<typename Container::value_type> Accumulate(
-    const Container& container) {
-  std::vector<typename Container::value_type> result;
-  result.insert(result.begin(), container.begin(), container.end());
-  return result;
-}
-
-#define ASSERT_SEQ_EQ(x, y) ASSERT_EQ((x), Accumulate(y));
-#define EXPECT_SEQ_EQ(x, y) EXPECT_EQ((x), Accumulate(y));
-
-TEST(ArraySortedMap, ReverseTraversal) {
+TEST(TreeSortedMap, ReverseTraversal) {
   IntMap map =
       IntMap().insert(1, 1).insert(5, 5).insert(3, 3).insert(2, 2).insert(4, 4);
 
@@ -280,7 +165,7 @@ TEST(ArraySortedMap, ReverseTraversal) {
   EXPECT_SEQ_EQ(expected, map.reverse());
 }
 
-TEST(ArraySortedMap, InsertionAndRemovalOfMaxItems) {
+TEST(TreeSortedMap, InsertionAndRemovalOfMaxItems) {
   auto expected_size = kFixedSize;
   int n = static_cast<int>(expected_size);
   std::vector<int> to_insert = Shuffled(Sequence(n));
@@ -300,14 +185,14 @@ TEST(ArraySortedMap, InsertionAndRemovalOfMaxItems) {
   ASSERT_EQ(0u, map.size()) << "Check we removed all of the items";
 }
 
-TEST(ArraySortedMap, BalanceProblem) {
+TEST(TreeSortedMap, BalanceProblem) {
   std::vector<int> to_insert{1, 7, 8, 5, 2, 6, 4, 0, 3};
 
   IntMap map = ToMap(to_insert);
   ASSERT_SEQ_EQ(Pairs(Sorted(to_insert)), map);
 }
 
-TEST(ArraySortedMap, KeyIterator) {
+TEST(TreeSortedMap, KeyIterator) {
   std::vector<int> all = Sequence(kFixedSize);
   IntMap map = ToMap(Shuffled(all));
 
@@ -320,14 +205,14 @@ TEST(ArraySortedMap, KeyIterator) {
   ASSERT_SEQ_EQ(all, map.keys());
 }
 
-TEST(ArraySortedMap, ReverseKeyIterator) {
+TEST(TreeSortedMap, ReverseKeyIterator) {
   std::vector<int> all = Sequence(kFixedSize);
   IntMap map = ToMap(Shuffled(all));
 
   ASSERT_SEQ_EQ(Reversed(all), map.reverse_keys());
 }
 
-TEST(ArraySortedMap, KeysFrom) {
+TEST(TreeSortedMap, KeysFrom) {
   std::vector<int> all = Sequence(2, 42, 2);
   IntMap map = ToMap(Shuffled(all));
   ASSERT_EQ(20u, map.size());
@@ -345,7 +230,7 @@ TEST(ArraySortedMap, KeysFrom) {
   ASSERT_SEQ_EQ(Sequence(12, 42, 2), map.keys_from(11));
 }
 
-TEST(ArraySortedMap, KeysIn) {
+TEST(TreeSortedMap, KeysIn) {
   std::vector<int> all = Sequence(2, 42, 2);
   IntMap map = ToMap(Shuffled(all));
   ASSERT_EQ(20u, map.size());
@@ -373,7 +258,7 @@ TEST(ArraySortedMap, KeysIn) {
   ASSERT_SEQ_EQ(Seq(8, 12), map.keys_in(7, 11));   // in between to in between
 }
 
-TEST(ArraySortedMap, ReverseKeysFrom) {
+TEST(TreeSortedMap, ReverseKeysFrom) {
   std::vector<int> all = Sequence(2, 42, 2);
   std::vector<int> to_insert = Shuffled(all);
   IntMap map = ToMap(to_insert);
@@ -394,7 +279,7 @@ TEST(ArraySortedMap, ReverseKeysFrom) {
   ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(11));
 }
 
-TEST(ArraySortedMap, FindIndex) {
+TEST(TreeSortedMap, FindIndex) {
   IntMap map = IntMap{{1, 1}, {3, 3}, {4, 4}, {7, 7}, {9, 9}, {50, 50}};
 
   ASSERT_EQ(IntMap::npos, map.find_index(0));
@@ -410,7 +295,7 @@ TEST(ArraySortedMap, FindIndex) {
   ASSERT_EQ(5u, map.find_index(50));
 }
 
-TEST(ArraySortedMap, AvoidsCopying) {
+TEST(TreeSortedMap, AvoidsCopying) {
   IntMap map;
 
   // Verify that emplacing a pair does not copy.
