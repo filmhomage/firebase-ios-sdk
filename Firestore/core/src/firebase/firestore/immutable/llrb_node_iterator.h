@@ -26,6 +26,34 @@ namespace firebase {
 namespace firestore {
 namespace immutable {
 
+template <typename K, typename V>
+struct ForwardPolicy {
+  using node_type = LlrbNode<K, V>;
+  using node_pointer_type = node_type*;
+
+  static node_pointer_type forward(node_pointer_type node) {
+    return node->left().get();
+  }
+
+  static node_pointer_type backward(node_pointer_type node) {
+    return node->right().get();
+  }
+};
+
+template <typename K, typename V>
+struct ReversePolicy {
+  using node_type = LlrbNode<K, V>;
+  using node_pointer_type = node_type*;
+
+  static node_pointer_type forward(node_pointer_type node) {
+    return node->right().get();
+  }
+
+  static node_pointer_type backward(node_pointer_type node) {
+    return node->left().get();
+  }
+};
+
 /**
  * A bidirectional iterator for traversing LlrbNodes.
  *
@@ -34,27 +62,27 @@ namespace immutable {
  * contain parent pointers and thus this iterator implementation must keep an
  * explicit stack.
  */
-template <typename K, typename V, typename C = std::less<K>>
+template <typename K, typename V, typename Policy, typename C = std::less<K>>
 class LlrbNodeIterator {
  private:
   using node_type = LlrbNode<K, V>;
-  using node_pointer_type = typename node_type::pointer_type;
+  using node_pointer_type = node_type*;
   using stack_type = std::stack<node_pointer_type>;
 
  public:
-  using iterator_category = std::bidirectional_iterator_tag;
+  using iterator_category = std::forward_iterator_tag;
   using value_type = node_type;
   using pointer = value_type*;
   using reference = value_type&;
   using difference_type = std::ptrdiff_t;
 
-  static LlrbNodeIterator Begin(const node_pointer_type root) {
+  static LlrbNodeIterator Begin(node_pointer_type root) {
     stack_type stack;
 
     node_pointer_type node = root;
     while (!node->empty()) {
       stack.push(node);
-      node = node->left();
+      node = Policy::backward(node);
     }
 
     return LlrbNodeIterator(std::move(stack), /* end= */ stack.empty());
@@ -66,7 +94,7 @@ class LlrbNodeIterator {
     node_pointer_type node = root;
     while (!node->empty()) {
       stack.push(node);
-      node = node->right();
+      node = Policy::forward(node);
     }
 
     return LlrbNodeIterator(std::move(stack), /* end= */ true);
@@ -74,13 +102,13 @@ class LlrbNodeIterator {
 
   node_pointer_type top() const {
     if (end_) {
-      return node_type::Empty();
+      return node_type::Empty().get();
     } else {
       return stack_.top();
     }
   }
   pointer get() const {
-    return top().get();
+    return top();
   }
   reference operator*() const {
     return *get();
@@ -102,10 +130,10 @@ class LlrbNodeIterator {
 
     // If the popped node has a right subtree that has to precede the parent in
     // the iteration order so push those on.
-    node = node->right();
+    node = Policy::forward(node);
     while (!node->empty()) {
       stack_.push(node);
-      node = node->left();
+      node = Policy::backward(node);
     }
 
     if (stack_.empty()) {
@@ -127,10 +155,10 @@ class LlrbNodeIterator {
 
     // If the popped node has a right subtree that has to precede the parent in
     // the iteration order so push those on.
-    node = node->left();
+    node = Policy::backward(node);
     while (!node->empty()) {
       stack_.push(node);
-      node = node->right();
+      node = Policy::forward(node);
     }
     return *this;
   }
@@ -173,6 +201,12 @@ class LlrbNodeIterator {
   stack_type stack_;
   bool end_;
 };
+
+template <typename K, typename V, typename C = std::less<K>>
+using LlrbNodeForwardIterator = LlrbNodeIterator<K, V, ForwardPolicy<K, V>, C>;
+
+template <typename K, typename V, typename C = std::less<K>>
+using LlrbNodeReverseIterator = LlrbNodeIterator<K, V, ReversePolicy<K, V>, C>;
 
 }
 }

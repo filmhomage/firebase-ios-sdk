@@ -32,17 +32,8 @@ namespace firestore {
 namespace immutable {
 
 using IntNode = LlrbNode<int, int>;
-using IntNodeIterator = LlrbNodeIterator<int, int>;
-
-IntNodeIterator Begin(IntNode node) {
-  auto pointer = std::make_shared<IntNode>(node);
-  return IntNodeIterator::Begin(pointer);
-}
-
-IntNodeIterator End(IntNode node) {
-  auto pointer = std::make_shared<IntNode>(node);
-  return IntNodeIterator::End(pointer);
-}
+using ForwardIterator = LlrbNodeForwardIterator<int, int>;
+using ReverseIterator = LlrbNodeReverseIterator<int, int>;
 
 /**
  * Creates an ArraySortedMap by inserting a pair for each value in the vector.
@@ -157,16 +148,16 @@ TEST(LlrbNode, Size) {
 
 TEST(LlrbNodeIterator, BeginEndEmpty) {
   IntNode empty;
-  IntNodeIterator begin = Begin(empty);
-  IntNodeIterator end = End(empty);
+  ForwardIterator begin = ForwardIterator::Begin(&empty);
+  ForwardIterator end = ForwardIterator::End(&empty);
   ASSERT_EQ(IntNode::Empty().get(), end.get());
   ASSERT_EQ(begin, end);
 }
 
 TEST(LlrbNodeIterator, BeginEndOne) {
   IntNode node = ToTree(Sequence(1));
-  IntNodeIterator begin = Begin(node);
-  IntNodeIterator end = End(node);
+  ForwardIterator begin = ForwardIterator::Begin(&node);
+  ForwardIterator end = ForwardIterator::End(&node);
   ASSERT_EQ(IntNode::Empty().get(), end.get());
 
   ASSERT_NE(begin, end);
@@ -177,11 +168,11 @@ TEST(LlrbNodeIterator, BeginEndOne) {
   ASSERT_EQ(begin, end);
 }
 
-TEST(LlrbNodeIterator, Increments) {
+TEST(LlrbNodeIterator, Iterates) {
   std::vector<int> to_insert = Sequence(50);
   IntNode node = ToTree(to_insert);
-  IntNodeIterator begin = Begin(node);
-  IntNodeIterator end = End(node);
+  ForwardIterator begin = ForwardIterator::Begin(&node);
+  ForwardIterator end = ForwardIterator::End(&node);
 
   std::vector<std::pair<int, int>> actual;
   for (auto &&node : util::make_range(begin, end)) {
@@ -189,11 +180,11 @@ TEST(LlrbNodeIterator, Increments) {
   }
 }
 
-TEST(LlrbNodeIterator, Decrements) {
+TEST(LlrbNodeIterator, ReverseIterates) {
   std::vector<int> to_insert = Sequence(50000);
   IntNode node = ToTree(to_insert);
-  IntNodeIterator begin = Begin(node);
-  IntNodeIterator end = End(node);
+  ReverseIterator begin = ReverseIterator::Begin(&node);
+  ReverseIterator end = ReverseIterator::End(&node);
 
   std::vector<std::pair<int, int>> actual;
   for (auto&& node : util::make_reverse_range(begin, end)) {
