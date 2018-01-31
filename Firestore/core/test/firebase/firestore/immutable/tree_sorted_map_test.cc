@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-#include "Firestore/core/src/firebase/firestore/immutable/array_sorted_map.h"
+#include "Firestore/core/src/firebase/firestore/immutable/tree_sorted_map.h"
 
 #include <numeric>
 #include <random>
 
 #include "Firestore/core/src/firebase/firestore/util/secure_random.h"
+#include "Firestore/core/test/firebase/firestore/immutable/testing.h"
 #include "gtest/gtest.h"
 
 namespace firebase {
@@ -27,8 +28,8 @@ namespace firestore {
 namespace immutable {
 
 typedef TreeSortedMap<int, int> IntMap;
-constexpr TreeSortedMapBase::size_type kFixedSize =
-    TreeSortedMapBase::kFixedSize;
+
+static constexpr IntMap::size_type kFixedSize = 100;
 
 TEST(TreeSortedMap, SearchForSpecificKey) {
   IntMap map{{1, 3}, {2, 4}};

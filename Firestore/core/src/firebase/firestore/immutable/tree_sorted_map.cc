@@ -19,10 +19,12 @@
 namespace firebase {
 namespace firestore {
 namespace immutable {
+namespace impl {
 
 // Define external storage for constants:
 constexpr TreeSortedMapBase::size_type TreeSortedMapBase::npos;
 
+}  // namespace impl
 }  // namespace immutable
 }  // namespace firestore
 }  // namespace firebase
