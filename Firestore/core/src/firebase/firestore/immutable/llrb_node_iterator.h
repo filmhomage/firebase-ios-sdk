@@ -21,6 +21,7 @@
 #include <stack>
 
 #include "Firestore/core/src/firebase/firestore/immutable/llrb_node.h"
+#include "Firestore/core/src/firebase/firestore/util/comparison.h"
 
 namespace firebase {
 namespace firestore {
@@ -30,6 +31,10 @@ template <typename K, typename V>
 struct ForwardPolicy {
   using node_type = LlrbNode<K, V>;
   using node_pointer_type = node_type*;
+
+  static constexpr util::ComparisonResult direction() {
+    return util::ComparisonResult::Ascending;
+  }
 
   static node_pointer_type forward(node_pointer_type node) {
     return node->left().get();
@@ -44,6 +49,10 @@ template <typename K, typename V>
 struct ReversePolicy {
   using node_type = LlrbNode<K, V>;
   using node_pointer_type = node_type*;
+
+  static constexpr util::ComparisonResult direction() {
+    return util::ComparisonResult::Descending;
+  }
 
   static node_pointer_type forward(node_pointer_type node) {
     return node->right().get();
@@ -76,7 +85,7 @@ class LlrbNodeIterator {
   using reference = value_type&;
   using difference_type = std::ptrdiff_t;
 
-  static LlrbNodeIterator Begin(node_pointer_type root) {
+  static LlrbNodeIterator Begin(const node_pointer_type root) {
     stack_type stack;
 
     node_pointer_type node = root;
@@ -97,7 +106,30 @@ class LlrbNodeIterator {
       node = Policy::forward(node);
     }
 
-    return LlrbNodeIterator(std::move(stack), /* end= */ true);
+    return LlrbNodeIterator(std::move(stack), /*end=*/ true);
+  }
+
+  static LlrbNodeIterator LowerBound(const node_pointer_type root, const K& key, const C& comparator) {
+    stack_type stack;
+
+    node_pointer_type node = root;
+    while (!node->empty()) {
+      stack.push(node);
+
+      util::ComparisonResult cmp = util::Compare(root->key(), key, comparator);
+      if (cmp == util::ComparisonResult::Same) {
+        // Found exactly what we're looking for so we're done.
+        break;
+
+      } else if (cmp == Policy::direction()) {
+        // node is less than the key (for the forward direction)
+        node = Policy::forward(node);
+      } else {
+        node = Policy::backward(node);
+      }
+    }
+
+    return LlrbNodeIterator(std::move(stack), /*end=*/root->empty());
   }
 
   node_pointer_type top() const {

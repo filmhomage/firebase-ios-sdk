@@ -31,6 +31,13 @@ typedef TreeSortedMap<int, int> IntMap;
 
 static constexpr IntMap::size_type kFixedSize = 100;
 
+TEST(TreeSortedMap, CreatesNode) {
+  IntMap map{{1, 2}};
+  EXPECT_FALSE(map.root()->empty());
+  EXPECT_TRUE(map.root()->left()->empty());
+  EXPECT_TRUE(map.root()->right()->empty());
+}
+
 TEST(TreeSortedMap, SearchForSpecificKey) {
   IntMap map{{1, 3}, {2, 4}};
 
@@ -231,89 +238,89 @@ TEST(TreeSortedMap, KeysFrom) {
   ASSERT_SEQ_EQ(Sequence(12, 42, 2), map.keys_from(11));
 }
 
-TEST(TreeSortedMap, KeysIn) {
-  std::vector<int> all = Sequence(2, 42, 2);
-  IntMap map = ToMap(Shuffled(all));
-  ASSERT_EQ(20u, map.size());
+//TEST(TreeSortedMap, KeysIn) {
+//  std::vector<int> all = Sequence(2, 42, 2);
+//  IntMap map = ToMap(Shuffled(all));
+//  ASSERT_EQ(20u, map.size());
+//
+//  auto Seq = [](int start, int end) { return Sequence(start, end, 2); };
+//
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(0, 1));   // before to before
+//  ASSERT_SEQ_EQ(all, map.keys_in(0, 100))      // before to after
+//  ASSERT_SEQ_EQ(Seq(2, 6), map.keys_in(0, 6))  // before to in map
+//  ASSERT_SEQ_EQ(Seq(2, 8), map.keys_in(0, 7))  // before to in between
+//
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 0));    // after to before
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 110));  // after to after
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 6));    // after to in map
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 7));    // after to in between
+//
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(6, 0));       // in map to before
+//  ASSERT_SEQ_EQ(Seq(6, 42), map.keys_in(6, 100));  // in map to after
+//  ASSERT_SEQ_EQ(Seq(6, 10), map.keys_in(6, 10));   // in map to in map
+//  ASSERT_SEQ_EQ(Seq(6, 12), map.keys_in(6, 11));   // in map to in between
+//
+//  ASSERT_SEQ_EQ(Empty(), map.keys_in(7, 0));       // in between to before
+//  ASSERT_SEQ_EQ(Seq(8, 42), map.keys_in(7, 100));  // in between to after
+//  ASSERT_SEQ_EQ(Seq(8, 10), map.keys_in(7, 10));   // in between to key in map
+//  ASSERT_SEQ_EQ(Seq(8, 12), map.keys_in(7, 11));   // in between to in between
+//}
 
-  auto Seq = [](int start, int end) { return Sequence(start, end, 2); };
+//TEST(TreeSortedMap, ReverseKeysFrom) {
+//  std::vector<int> all = Sequence(2, 42, 2);
+//  std::vector<int> to_insert = Shuffled(all);
+//  IntMap map = ToMap(to_insert);
+//  ASSERT_EQ(20u, map.size());
+//
+//  auto Seq = [](int start, int end) { return Sequence(start, end, -2); };
+//
+//  // Test from before keys
+//  ASSERT_SEQ_EQ(Empty(), map.reverse_keys_from(0));
+//
+//  // Test from after keys.
+//  ASSERT_SEQ_EQ(Seq(40, 0), map.reverse_keys_from(100));
+//
+//  // Test from key in map.
+//  ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(10));
+//
+//  // Test from in between keys.
+//  ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(11));
+//}
 
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(0, 1));   // before to before
-  ASSERT_SEQ_EQ(all, map.keys_in(0, 100))      // before to after
-  ASSERT_SEQ_EQ(Seq(2, 6), map.keys_in(0, 6))  // before to in map
-  ASSERT_SEQ_EQ(Seq(2, 8), map.keys_in(0, 7))  // before to in between
+//TEST(TreeSortedMap, FindIndex) {
+//  IntMap map = IntMap{{1, 1}, {3, 3}, {4, 4}, {7, 7}, {9, 9}, {50, 50}};
+//
+//  ASSERT_EQ(IntMap::npos, map.find_index(0));
+//  ASSERT_EQ(0u, map.find_index(1));
+//  ASSERT_EQ(IntMap::npos, map.find_index(2));
+//  ASSERT_EQ(1u, map.find_index(3));
+//  ASSERT_EQ(2u, map.find_index(4));
+//  ASSERT_EQ(IntMap::npos, map.find_index(5));
+//  ASSERT_EQ(IntMap::npos, map.find_index(6));
+//  ASSERT_EQ(3u, map.find_index(7));
+//  ASSERT_EQ(IntMap::npos, map.find_index(8));
+//  ASSERT_EQ(4u, map.find_index(9));
+//  ASSERT_EQ(5u, map.find_index(50));
+//}
 
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 0));    // after to before
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 110));  // after to after
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 6));    // after to in map
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(100, 7));    // after to in between
-
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(6, 0));       // in map to before
-  ASSERT_SEQ_EQ(Seq(6, 42), map.keys_in(6, 100));  // in map to after
-  ASSERT_SEQ_EQ(Seq(6, 10), map.keys_in(6, 10));   // in map to in map
-  ASSERT_SEQ_EQ(Seq(6, 12), map.keys_in(6, 11));   // in map to in between
-
-  ASSERT_SEQ_EQ(Empty(), map.keys_in(7, 0));       // in between to before
-  ASSERT_SEQ_EQ(Seq(8, 42), map.keys_in(7, 100));  // in between to after
-  ASSERT_SEQ_EQ(Seq(8, 10), map.keys_in(7, 10));   // in between to key in map
-  ASSERT_SEQ_EQ(Seq(8, 12), map.keys_in(7, 11));   // in between to in between
-}
-
-TEST(TreeSortedMap, ReverseKeysFrom) {
-  std::vector<int> all = Sequence(2, 42, 2);
-  std::vector<int> to_insert = Shuffled(all);
-  IntMap map = ToMap(to_insert);
-  ASSERT_EQ(20u, map.size());
-
-  auto Seq = [](int start, int end) { return Sequence(start, end, -2); };
-
-  // Test from before keys
-  ASSERT_SEQ_EQ(Empty(), map.reverse_keys_from(0));
-
-  // Test from after keys.
-  ASSERT_SEQ_EQ(Seq(40, 0), map.reverse_keys_from(100));
-
-  // Test from key in map.
-  ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(10));
-
-  // Test from in between keys.
-  ASSERT_SEQ_EQ(Seq(10, 0), map.reverse_keys_from(11));
-}
-
-TEST(TreeSortedMap, FindIndex) {
-  IntMap map = IntMap{{1, 1}, {3, 3}, {4, 4}, {7, 7}, {9, 9}, {50, 50}};
-
-  ASSERT_EQ(IntMap::npos, map.find_index(0));
-  ASSERT_EQ(0u, map.find_index(1));
-  ASSERT_EQ(IntMap::npos, map.find_index(2));
-  ASSERT_EQ(1u, map.find_index(3));
-  ASSERT_EQ(2u, map.find_index(4));
-  ASSERT_EQ(IntMap::npos, map.find_index(5));
-  ASSERT_EQ(IntMap::npos, map.find_index(6));
-  ASSERT_EQ(3u, map.find_index(7));
-  ASSERT_EQ(IntMap::npos, map.find_index(8));
-  ASSERT_EQ(4u, map.find_index(9));
-  ASSERT_EQ(5u, map.find_index(50));
-}
-
-TEST(TreeSortedMap, AvoidsCopying) {
-  IntMap map;
-
-  // Verify that emplacing a pair does not copy.
-  IntMap inserted = map.insert(10, 20);
-  auto found = inserted.find(10);
-  ASSERT_NE(found, inserted.end());
-  EXPECT_EQ(20, found->second);
-
-  // Verify that inserting something with equal keys and values just returns
-  // this.
-  IntMap duped = inserted.insert(10, 20);
-  auto duped_found = duped.find(10);
-
-  // If everything worked correctly, the backing array should not have been
-  // copied and the pointer to the entry with 10 as key should be the same.
-  EXPECT_EQ(found, duped_found);
-}
+//TEST(TreeSortedMap, AvoidsCopying) {
+//  IntMap map;
+//
+//  // Verify that emplacing a pair does not copy.
+//  IntMap inserted = map.insert(10, 20);
+//  auto found = inserted.find(10);
+//  ASSERT_NE(found, inserted.end());
+//  EXPECT_EQ(20, found->second);
+//
+//  // Verify that inserting something with equal keys and values just returns
+//  // this.
+//  IntMap duped = inserted.insert(10, 20);
+//  auto duped_found = duped.find(10);
+//
+//  // If everything worked correctly, the backing array should not have been
+//  // copied and the pointer to the entry with 10 as key should be the same.
+//  EXPECT_EQ(found, duped_found);
+//}
 
 }  // namespace immutable
 }  // namespace firestore

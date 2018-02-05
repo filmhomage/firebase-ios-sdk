@@ -79,8 +79,8 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
    * The type of the node containing entries of value_type.
    */
   using node_type = LlrbNode<K, V>;
-  using const_iterator = LlrbNodeIterator<K, V>;
-  using const_reverse_iterator = typename std::reverse_iterator<const_iterator>;
+  using const_iterator = LlrbNodeForwardIterator<K, V, C>;
+  using const_reverse_iterator = LlrbNodeReverseIterator<K, V, C>;
   using const_key_iterator = firebase::firestore::util::iterator_first<const_iterator>;
 
   using node_pointer = std::shared_ptr<node_type>;
@@ -100,7 +100,7 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
       : root_(), key_comparator_(comparator) {
     node_pointer root = node_type::Empty();
     for (auto&& entry : entries) {
-      root = root->insert(entry.first, entry.second);
+      root = wrap(root->insert(entry.first, entry.second));
     }
     root_ = root;
   }
@@ -145,33 +145,34 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
 //  }
 
   /** Returns true if the map contains no elements. */
-//  bool empty() const {
-//    return size() == 0;
-//  }
+  bool empty() const {
+    return size() == 0;
+  }
 
   /** Returns the number of items in this map. */
-//  size_type size() const {
-//  }
+  size_type size() const {
+    return root_->size();
+  }
 
   /**
    * Returns of a view of this TreeSortedMap containing just the keys that
    * have been inserted.
    */
-//  const util::range<const_key_iterator> keys() const {
-//    auto keys_begin = util::make_iterator_first(begin());
-//    auto keys_end = util::make_iterator_first(end());
-//    return util::make_range(keys_begin, keys_end);
-//  }
+  const util::range<const_key_iterator> keys() const {
+    auto keys_begin = util::make_iterator_first(begin());
+    auto keys_end = util::make_iterator_first(end());
+    return util::make_range(keys_begin, keys_end);
+  }
 
   /**
    * Returns of a view of this TreeSortedMap containing just the keys that
    * have been inserted whose values are greater than or equal to the given key.
    */
-//  const util::range<const_key_iterator> keys_from(const K& key) const {
-//    auto keys_begin = util::make_iterator_first(LowerBound(key));
-//    auto keys_end = util::make_iterator_first(end());
-//    return util::make_range(keys_begin, keys_end);
-//  }
+  const util::range<const_key_iterator> keys_from(const K& key) const {
+    auto keys_begin = util::make_iterator_first(LowerBound(key));
+    auto keys_end = util::make_iterator_first(end());
+    return util::make_range(keys_begin, keys_end);
+  }
 
   /**
    * Returns of a view of this TreeSortedMap containing just the keys that
@@ -189,12 +190,12 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
    * Returns of a view of this TreeSortedMap containing just the keys that
    * have been inserted in reverse order.
    */
-//  const util::range<std::reverse_iterator<const_key_iterator>> reverse_keys()
-//      const {
-//    auto keys_begin = util::make_iterator_first(begin());
-//    auto keys_end = util::make_iterator_first(end());
-//    return util::make_reverse_range(keys_begin, keys_end);
-//  }
+  const util::range<std::reverse_iterator<const_key_iterator>> reverse_keys()
+      const {
+    auto keys_begin = util::make_iterator_first(rbegin());
+    auto keys_end = util::make_iterator_first(rend());
+    return util::make_range(keys_begin, keys_end);
+  }
 
   /**
    * Returns a reverse ordered view of this TreeSortedMap whose keys are
@@ -217,35 +218,45 @@ class TreeSortedMap : public impl::TreeSortedMapBase {
 //    return util::make_reverse_range(keys_begin, keys_end);
 //  }
 
+  const node_pointer& root() const {
+    return root_;
+  }
+
   /**
    * Returns an iterator pointing to the first entry in the map. If there are
    * no entries in the map, begin() == end().
    */
-//  const_iterator begin() const {
-//  }
+  const_iterator begin() const {
+    return const_iterator::Begin(root_.get());
+  }
 
   /**
    * Returns an iterator pointing past the last entry in the map.
    */
-//  const_iterator end() const {
-//  }
+  const_iterator end() const {
+    return const_iterator::End(root_.get());
+  }
 
-//  const_reverse_iterator rbegin() const {
-//    return const_reverse_iterator(array_->end());
-//  }
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator::Begin(root_.get());
+  }
 
-//  const_reverse_iterator rend() const {
-//    return const_reverse_iterator(array_->begin());
-//  }
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator::End(root_.get());
+  }
 
-//  util::range<const_reverse_iterator> reverse() const {
-//    return util::make_range(rbegin(), rend());
-//  }
+  util::range<const_reverse_iterator> reverse() const {
+    return util::make_range(rbegin(), rend());
+  }
 
  private:
   TreeSortedMap(const node_pointer& root,
                 const key_comparator_type& key_comparator) noexcept
       : root_(root), key_comparator_(key_comparator) {
+  }
+
+  const_iterator LowerBound(const K& key) {
+    return const_iterator::LowerBound(root_, key, key_comparator_);
   }
 
 //  TreeSortedMap wrap(const node_pointer& root) const noexcept {

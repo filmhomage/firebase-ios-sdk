@@ -54,12 +54,14 @@ class LlrbNodeBase {
 template <typename K, typename V>
 class LlrbNode : LlrbNodeBase {
  public:
+  using first_type = K;
+  using second_type = V;
+
   /**
    * The type of the entries stored in the map.
    */
-  typedef std::pair<K, V> value_type;
-
-  typedef std::shared_ptr<LlrbNode<K, V>> pointer_type;
+  using value_type = std::pair<K, V>;
+  using pointer_type = std::shared_ptr<LlrbNode<K, V>>;
 
   /**
    * Returns an empty node.
@@ -83,12 +85,6 @@ class LlrbNode : LlrbNodeBase {
                  left->size_ + 1 + right->size_,
                  left, right) {
   }
-
-  /** Returns a tree node with the given key-value pair set/updated. */
-  template <typename Comparator = std::less<K>>
-  LlrbNode insert(const K& key,
-                  const V& value,
-                  const Comparator& comparator = Comparator()) const;
 
   /** Returns the number of elements at this node or beneath it in the tree. */
   size_type size() const {
@@ -121,6 +117,14 @@ class LlrbNode : LlrbNodeBase {
   }
   const pointer_type& right() const {
     return right_;
+  }
+
+  /** Returns a tree node with the given key-value pair set/updated. */
+  template <typename Comparator = std::less<K>>
+  static pointer_type Insert(const pointer_type& root,
+                             const K& key, const V& value,
+                             const Comparator& comparator = Comparator()) {
+
   }
 
  private:
